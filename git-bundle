@@ -9,7 +9,7 @@ var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles'; // Wher
 var myPrefix; // Where we are relative to the root of the project (e.g. 'dir1/dir2/dir3')
 // Work out the root directory and change to it - also setting myPrefix {{{
 if (fs.existsSync('.git')) {
-	myPrefix = '';
+	myPrefix = '/';
 } else { // No .git dir - try to find it by poping the dir stack until we hit root
 	var myDir = process.cwd().split('/');
 	myPrefix = [];
@@ -38,7 +38,7 @@ function getBundles(filters) {
 	}
 	return bundles;
 }
-function recurseFS(path) {
+function recurseFS(path, depth, thisDepth) {
 	var out = [];
 	var files = fs.readdirSync(path).sort();
 	for (var f in files) {
@@ -47,7 +47,8 @@ function recurseFS(path) {
 		if (files[f] == '.git') {
 			// Pass
 		} else if (stats.isDirectory()) {
-			out = out.concat(recurseFS(fullPath));
+			if (depth > 0 && depth < thisDepth)
+				out = out.concat(recurseFS(fullPath, depth, thisDepth + 1));
 		} else if (stats.isFile()) {
 			out.push(fullPath);
 		}
@@ -150,6 +151,35 @@ program
 					console.warn('File in', bundles[b], 'but not in working project:', files[f]);
 				}
 			}
+		}
+	});
+// }}}
+// CMD: owner {{{
+program
+	.command('owner')
+	.usage('[files...]')
+	.description('Show the ownership of files')
+	.action(function() {
+		var bundles = getBundles();
+		var bundleFiles = {};
+		if (!program.operands.length) // No files specified - assume all
+			program.operands = fs.readdirSync('.').sort();
+		for (var b in bundles) { // Cache top layer of files using this prefix for each bundle
+			var files = recurseFS(myPath + myPrefix + bundles[b], 1);
+			bundleFiles[bundles[b]] = {};
+			for (var f in files) {
+				bundleFiles[bundles[b]][pathComponent.basename(files[f])] = true;
+			}
+		}
+		console.log(bundles, bundleFiles);
+		for (var f in program.operands) {
+			var owners = [];
+			for (var b in bundleFiles) {
+				if (program.operands[f] in bundleFiles[b]) {
+					owners.push(b);
+				}
+			}
+			console.log(owners.length ? owners.join(',') : ' -- ', program.operands[f]);
 		}
 	});
 // }}}
