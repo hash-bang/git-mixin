@@ -5,7 +5,25 @@ var fs = require('fs');
 var _ = require('underscore');
 var pathComponent = require('path-component');
 
-var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles';
+var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles'; // Where the bundles directory is located
+var myPrefix; // Where we are relative to the root of the project (e.g. 'dir1/dir2/dir3')
+// Work out the root directory and change to it - also setting myPrefix {{{
+if (fs.existsSync('.git')) {
+	myPrefix = '';
+} else { // No .git dir - try to find it by poping the dir stack until we hit root
+	var myDir = process.cwd().split('/');
+	myPrefix = [];
+	while (myDir.length) {
+		process.chdir(myDir.join('/'));
+		if (fs.existsSync('.git')) {
+			myPrefix = myPrefix.reverse().join('/');
+			break;
+		} else {
+			myPrefix.push(myDir.pop());
+		}
+	}
+}
+// }}}
 
 // Functions {{{
 function getBundles(filters) {
@@ -158,6 +176,7 @@ program
 	.description('Show config information')
 	.action(function() {
 		console.log('Path', myPath);
+		console.log('Prefix', myPrefix);
 	});
 // }}}
 // CMD: Else {{{
