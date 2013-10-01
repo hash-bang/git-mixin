@@ -135,18 +135,37 @@ program
 		}
 	});
 // }}}
-
+// CMD: status {{{
+program
+	.command('status')
+	.usage('[bundle...]')
+	.description('Show the status of installed bundles')
+	.action(function() {
+		var myDir = process.cwd();
+		var bundles = getBundles(program.operands);
+		for (var b in bundles) {
+			console.log();
+			console.log('BUNDLE', bundles[b]);
+			process.chdir(myPath + '/' + bundles[b]);
+			sh.run("git status");
+			process.chdir(myDir);
+		}
+	});
+// }}}
+// CMD: debug {{{
 program
 	.command('debug')
 	.description('Show config information')
 	.action(function() {
 		console.log('Path', myPath);
 	});
-
+// }}}
+// CMD: Else {{{
 program
 	.command('*')
 	.action(function() {
 		console.warn('Unknown command');
 	});
+// }}}
 
 program.parse(process.argv);
