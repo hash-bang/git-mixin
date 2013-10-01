@@ -1,0 +1,63 @@
+#!/usr/bin/env node
+var program = require('commander');
+var sh = require('execSync');
+var fs = require('fs');
+var _ = require('underscore');
+
+var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles';
+
+// Functions {{{
+function getBundles(filters) {
+	var bundles = fs.readdirSync(myPath).sort();
+	if (filters && filters.length) {
+		bundles = _.filter(bundles, function(item) {
+			for (var f in filters) {
+				if (item == filters[f])
+					return 1;
+			}
+		});
+	}
+	return bundles;
+}
+// }}}
+
+// Global options {{{
+program	
+	.version('0.0.1')
+	.usage('git bundle <command>')
+	.option('-p, --path <path>', 'Specify the bundle directory (otherwise specified in bundle.path)')
+	.option('-v, --verbose', 'Verbosity')
+	.parse(process.argv);
+
+if (program.path)
+	myPath = program.path;
+
+// Dump remaining args into program.operands
+program.operands = _.filter(program.args, function(i) { return typeof i == 'string' });
+program.operands.shift(); // Assume first arg is always going to be a command
+// }}}
+
+program
+	.command('list')
+	.description('List all installed bundles')
+	.action(function() {
+		var bundles = getBundles(program.operands);
+		for (var b in bundles) {
+			console.log(bundles[b]);
+		}
+	});
+
+program
+	.command('debug')
+	.description('Show config information')
+	.action(function() {
+		console.log('Path', myPath);
+	});
+
+program
+	.command('*')
+	.action(function() {
+		console.warn('Unknown command');
+	});
+
+program.parse(process.argv);
