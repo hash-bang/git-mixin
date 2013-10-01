@@ -24,7 +24,7 @@ function getBundles(filters) {
 // Global options {{{
 program	
 	.version('0.0.1')
-	.usage('git bundle <command>')
+	.usage('<command>')
 	.option('-p, --path <path>', 'Specify the bundle directory (otherwise specified in bundle.path)')
 	.option('-v, --verbose', 'Verbosity')
 	.parse(process.argv);
@@ -37,8 +37,10 @@ program.operands = _.filter(program.args, function(i) { return typeof i == 'stri
 program.operands.shift(); // Assume first arg is always going to be a command
 // }}}
 
+// CMD: list {{{
 program
 	.command('list')
+	.usage('[filters...]')
 	.description('List all installed bundles')
 	.action(function() {
 		var bundles = getBundles(program.operands);
@@ -46,6 +48,7 @@ program
 			console.log(bundles[b]);
 		}
 	});
+// }}}
 
 program
 	.command('debug')
