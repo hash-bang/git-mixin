@@ -20,6 +20,22 @@ function getBundles(filters) {
 	}
 	return bundles;
 }
+function recurseFS(path) {
+	var out = [];
+	var files = fs.readdirSync(path).sort();
+	for (var f in files) {
+		var fullPath = path + '/' + files[f];
+		var stats = fs.statSync(fullPath);
+		if (files[f] == '.git') {
+			// Pass
+		} else if (stats.isDirectory()) {
+			out = out.concat(recurseFS(fullPath));
+		} else if (stats.isFile()) {
+			out.push(fullPath);
+		}
+	}
+	return out;
+}
 // }}}
 
 // Global options {{{
@@ -64,6 +80,57 @@ program
 			} else {
 				console.log("Installing", name, '...');
 				sh.exec("git clone '" + program.operands[o] + "' '" + myPath + "/" + name + "'");
+			}
+		}
+	});
+// }}}
+// CMD: merge {{{
+program
+	.command('merge')
+	.usage('[bundle...]')
+	.description('Merge the bundles into the working project')
+	.action(function() {
+		var bundles = getBundles(program.operands);
+		for (var b in bundles) {
+			console.log('Merging', bundles[b], '...');
+			var bundlePath = myPath + '/' + bundles[b];
+			var files = _.map(recurseFS(bundlePath), function(v) { // Crop file prefix
+				return v.substr(bundlePath.length+1);
+			});
+			for (var f in files) {
+				// Check that directory tree exists {{{
+				var path = '';
+				_.each(pathComponent.dirname(files[f]).split('/'), function(v) {
+					path += v;
+					if (!fs.existsSync(path))
+						fs.mkdirSync(path);
+					path += '/';
+				});
+				// }}}
+				sh.run("cp '" + bundlePath + '/' + files[f] + "' './" + files[f] + "'");
+			}
+		}
+	});
+// }}}
+// CMD: unmerge {{{
+program
+	.command('unmerge')
+	.usage('[bundle...]')
+	.description('Merge the bundles into the working project')
+	.action(function() {
+		var bundles = getBundles(program.operands);
+		for (var b in bundles) {
+			console.log('Merging', bundles[b], '...');
+			var bundlePath = myPath + '/' + bundles[b];
+			var files = _.map(recurseFS(bundlePath), function(v) { // Crop file prefix
+				return v.substr(bundlePath.length+1);
+			});
+			for (var f in files) {
+				if (fs.existsSync('./' + files[f])) {
+					sh.run("cp './" + files[f] + "' '" + bundlePath + '/' + files[f] + "'");
+				} else {
+					console.warn('File in', bundles[b], 'but not in working project:', files[f]);
+				}
 			}
 		}
 	});
