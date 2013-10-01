@@ -3,6 +3,7 @@ var program = require('commander');
 var sh = require('execSync');
 var fs = require('fs');
 var _ = require('underscore');
+var pathComponent = require('path-component');
 
 var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles';
 
@@ -46,6 +47,24 @@ program
 		var bundles = getBundles(program.operands);
 		for (var b in bundles) {
 			console.log(bundles[b]);
+		}
+	});
+// }}}
+// CMD: install {{{
+program
+	.command('install')
+	.usage('[URIs...]')
+	.description('Download and install the URI to a bundle')
+	.action(function() {
+		var existing = getBundles();
+		for (var o in program.operands) {
+			var name = pathComponent.basename(program.operands[o]).replace(/\.git$/, '');
+			if (_.indexOf(existing, name, true) > -1) {
+				console.warn('Bundle', name, 'is already installed');
+			} else {
+				console.log("Installing", name, '...');
+				sh.exec("git clone '" + program.operands[o] + "' '" + myPath + "/" + name + "'");
+			}
 		}
 	});
 // }}}

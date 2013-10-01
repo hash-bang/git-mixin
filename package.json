@@ -6,7 +6,8 @@
 	"dependencies": {
 		"commander": ">=2.0.0",
 		"execSync": ">=1.0.1-pre",
-		"underscore": ">=1.5.2"
+		"underscore": ">=1.5.2",
+		"path-component": ">=0.0.1"
 	},
 	"scripts": {
 	},
