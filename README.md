@@ -5,6 +5,13 @@ A handy script which manages (MixIn)[https://en.wikipedia.org/wiki/Mixin] type p
 This script was originally created when I needed a way to push/pull lots of different Git repositories into the same tree.
 
 
+Why was this project created
+============================
+As an IT company we end up writing and reusing common components all the time. Unfortunately there is no real way to bring all of these together into a project without abandoning the original repository information.
+
+Git-Bundle is designed to track and retain what files belong to what projects and provide an easy method to pull in code from other projects but still be able to update those projects upstream if alterations/upgrades are made to the code.
+
+
 Examples
 ========
 
