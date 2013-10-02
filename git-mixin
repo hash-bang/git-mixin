@@ -217,7 +217,7 @@ program
 		var mixins = getMixins(program.operands);
 		for (var b in mixins) {
 			console.log();
-			console.log('MIXIN', mixins[b]);
+			console.log(color.bold.underline(mixins[b]));
 			process.chdir(myPath + '/' + mixins[b]);
 			sh.run("git status");
 			process.chdir(myDir);
