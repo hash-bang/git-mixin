@@ -247,13 +247,14 @@ program
 		for (var f in program.operands) {
 			var file = program.operands[f];
 			var sourceFile = (myPrefix ? myPrefix + '/' : '') + file;
-			var dstFile = myPath + '/' + program.mixin + (myPrefix ? '/' + myPrefix : '') + '/' + file;
+			var dstFile = myPath + '/' + program.mixin + (myPrefix ? '/' + myPrefix : '/') + file;
 			if (!fs.existsSync(sourceFile)) {
 				console.warn('File not found:', sourceFile);
 			} else if (fs.existsSync(dstFile)) {
 				console.warn('File already part of mixin:', sourceFile);
 			} else {
 				console.log('Claim', file);
+				recurseMkDir(pathComponent.dirname(dstFile));
 				sh.run("cp '" + sourceFile + "' '" + dstFile + "'");
 			}
 		}
