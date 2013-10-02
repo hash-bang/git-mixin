@@ -4,6 +4,9 @@ var sh = require('execSync');
 var fs = require('fs');
 var _ = require('underscore');
 var pathComponent = require('path-component');
+var table = require('text-table');
+var color = require('cli-color');
+var ansiTrim = require('cli-color/lib/trim');
 
 var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles'; // Where the bundles directory is located
 var myPrefix; // Where we are relative to the root of the project (e.g. 'dir1/dir2/dir3')
@@ -171,7 +174,7 @@ program
 				bundleFiles[bundles[b]][pathComponent.basename(files[f])] = true;
 			}
 		}
-		console.log(bundles, bundleFiles);
+		var tableData = [[color.bold('Bundle(s)'), color.bold('File')]];
 		for (var f in program.operands) {
 			var owners = [];
 			for (var b in bundleFiles) {
@@ -179,8 +182,12 @@ program
 					owners.push(b);
 				}
 			}
-			console.log(owners.length ? owners.join(',') : ' -- ', program.operands[f]);
+			tableData.push([owners.length ? owners.join(',') : ' -- ', program.operands[f]]);
 		}
+		console.log(table(tableData,{
+			align: ['c', 'l'],
+			stringLength: function(s) { return ansiTrim(s).length }
+		}));
 	});
 // }}}
 // CMD: status {{{
