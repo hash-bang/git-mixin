@@ -8,7 +8,7 @@ var table = require('text-table');
 var color = require('cli-color');
 var ansiTrim = require('cli-color/lib/trim');
 
-var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles'; // Where the bundles directory is located
+var myPath = sh.exec('git config mixin.path').stdout || '.git/mixins'; // Where the mixins directory is located
 var myPrefix; // Where we are relative to the root of the project (e.g. 'dir1/dir2/dir3')
 // Work out the root directory and change to it - also setting myPrefix {{{
 if (fs.existsSync('.git')) {
@@ -29,17 +29,17 @@ if (fs.existsSync('.git')) {
 // }}}
 
 // Functions {{{
-function getBundles(filters) {
-	var bundles = fs.readdirSync(myPath).sort();
+function getMixins(filters) {
+	var mixins = fs.readdirSync(myPath).sort();
 	if (filters && filters.length) {
-		bundles = _.filter(bundles, function(item) {
+		mixins = _.filter(mixins, function(item) {
 			for (var f in filters) {
 				if (item == filters[f])
 					return 1;
 			}
 		});
 	}
-	return bundles;
+	return mixins;
 }
 function recurseFS(path, depth, thisDepth) {
 	var out = [];
@@ -80,7 +80,7 @@ function init(ensureGit) {
 program	
 	.version('0.0.1')
 	.usage('<command>')
-	.option('-p, --path <path>', 'Specify the bundle directory (otherwise specified in bundle.path)')
+	.option('-p, --path <path>', 'Specify the mixin directory (otherwise specified in mixin.path)')
 	.option('-v, --verbose', 'Verbosity');
 // }}}
 
@@ -88,12 +88,12 @@ program
 program
 	.command('list')
 	.usage('[filters...]')
-	.description('List all installed bundles')
+	.description('List all installed mixins')
 	.action(function() {
 		init(1);
-		var bundles = getBundles(program.operands);
-		for (var b in bundles) {
-			console.log(bundles[b]);
+		var mixins = getMixins(program.operands);
+		for (var b in mixins) {
+			console.log(mixins[b]);
 		}
 	});
 // }}}
@@ -101,14 +101,14 @@ program
 program
 	.command('install')
 	.usage('[URIs...]')
-	.description('Download and install the URI to a bundle')
+	.description('Download and install the URI to a mixin')
 	.action(function() {
 		init(1);
-		var existing = getBundles();
+		var existing = getMixins();
 		for (var o in program.operands) {
 			var name = pathComponent.basename(program.operands[o]).replace(/\.git$/, '');
 			if (_.indexOf(existing, name, true) > -1) {
-				console.warn('Bundle', name, 'is already installed');
+				console.warn('Mixin', name, 'is already installed');
 			} else {
 				console.log("Installing", name, '...');
 				sh.exec("git clone '" + program.operands[o] + "' '" + myPath + "/" + name + "'");
@@ -119,16 +119,16 @@ program
 // CMD: merge {{{
 program
 	.command('merge')
-	.usage('[bundle...]')
-	.description('Merge the bundles into the working project')
+	.usage('[mixin...]')
+	.description('Merge the mixins into the working project')
 	.action(function() {
 		init(1);
-		var bundles = getBundles(program.operands);
-		for (var b in bundles) {
-			console.log('Merging', bundles[b], '...');
-			var bundlePath = myPath + '/' + bundles[b];
-			var files = _.map(recurseFS(bundlePath), function(v) { // Crop file prefix
-				return v.substr(bundlePath.length+1);
+		var mixins = getMixins(program.operands);
+		for (var b in mixins) {
+			console.log('Merging', mixins[b], '...');
+			var mixinPath = myPath + '/' + mixins[b];
+			var files = _.map(recurseFS(mixinPath), function(v) { // Crop file prefix
+				return v.substr(mixinPath.length+1);
 			});
 			for (var f in files) {
 				// Check that directory tree exists {{{
@@ -140,7 +140,7 @@ program
 					path += '/';
 				});
 				// }}}
-				sh.run("cp '" + bundlePath + '/' + files[f] + "' './" + files[f] + "'");
+				sh.run("cp '" + mixinPath + '/' + files[f] + "' './" + files[f] + "'");
 			}
 		}
 	});
@@ -148,22 +148,22 @@ program
 // CMD: unmerge {{{
 program
 	.command('unmerge')
-	.usage('[bundle...]')
-	.description('Merge the bundles into the working project')
+	.usage('[mixin...]')
+	.description('Merge the mixins into the working project')
 	.action(function() {
 		init(1);
-		var bundles = getBundles(program.operands);
-		for (var b in bundles) {
-			console.log('Merging', bundles[b], '...');
-			var bundlePath = myPath + '/' + bundles[b];
-			var files = _.map(recurseFS(bundlePath), function(v) { // Crop file prefix
-				return v.substr(bundlePath.length+1);
+		var mixins = getMixins(program.operands);
+		for (var b in mixins) {
+			console.log('Merging', mixins[b], '...');
+			var mixinPath = myPath + '/' + mixins[b];
+			var files = _.map(recurseFS(mixinPath), function(v) { // Crop file prefix
+				return v.substr(mixinPath.length+1);
 			});
 			for (var f in files) {
 				if (fs.existsSync('./' + files[f])) {
-					sh.run("cp './" + files[f] + "' '" + bundlePath + '/' + files[f] + "'");
+					sh.run("cp './" + files[f] + "' '" + mixinPath + '/' + files[f] + "'");
 				} else {
-					console.warn('File in', bundles[b], 'but not in working project:', files[f]);
+					console.warn('File in', mixins[b], 'but not in working project:', files[f]);
 				}
 			}
 		}
@@ -176,25 +176,25 @@ program
 	.description('Show the ownership of files')
 	.action(function() {
 		init(1);
-		var bundles = getBundles();
-		var bundleFiles = {};
+		var mixins = getMixins();
+		var mixinFiles = {};
 		if (!program.operands.length) // No files specified - assume all
 			program.operands = _.without(fs.readdirSync(myPrefix ? myPrefix : '.'), '.git').sort();
-		for (var b in bundles) { // Cache top layer of files using this prefix for each bundle
-			var bundleDir = myPath + '/' + bundles[b] + (myPrefix ? '/' + myPrefix : '');
-			if (fs.existsSync(bundleDir)) {
-				var files = recurseFS(bundleDir, 1);
-				bundleFiles[bundles[b]] = {};
+		for (var b in mixins) { // Cache top layer of files using this prefix for each mixin
+			var mixinDir = myPath + '/' + mixins[b] + (myPrefix ? '/' + myPrefix : '');
+			if (fs.existsSync(mixinDir)) {
+				var files = recurseFS(mixinDir, 1);
+				mixinFiles[mixins[b]] = {};
 				for (var f in files) {
-					bundleFiles[bundles[b]][pathComponent.basename(files[f])] = true;
+					mixinFiles[mixins[b]][pathComponent.basename(files[f])] = true;
 				}
 			}
 		}
-		var tableData = [[color.bold('Bundle(s)'), color.bold('File')]];
+		var tableData = [[color.bold('Mixin(s)'), color.bold('File')]];
 		for (var f in program.operands) {
 			var owners = [];
-			for (var b in bundleFiles) {
-				if (program.operands[f] in bundleFiles[b]) {
+			for (var b in mixinFiles) {
+				if (program.operands[f] in mixinFiles[b]) {
 					owners.push(b);
 				}
 			}
@@ -209,16 +209,16 @@ program
 // CMD: status {{{
 program
 	.command('status')
-	.usage('[bundle...]')
-	.description('Show the status of installed bundles')
+	.usage('[mixin...]')
+	.description('Show the status of installed mixins')
 	.action(function() {
 		init(1);
 		var myDir = process.cwd();
-		var bundles = getBundles(program.operands);
-		for (var b in bundles) {
+		var mixins = getMixins(program.operands);
+		for (var b in mixins) {
 			console.log();
-			console.log('BUNDLE', bundles[b]);
-			process.chdir(myPath + '/' + bundles[b]);
+			console.log('MIXIN', mixins[b]);
+			process.chdir(myPath + '/' + mixins[b]);
 			sh.run("git status");
 			process.chdir(myDir);
 		}

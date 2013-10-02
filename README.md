@@ -1,5 +1,5 @@
-Git-Bundle
-==========
+Git-Mixin
+=========
 A handy script which manages (MixIn)[https://en.wikipedia.org/wiki/Mixin] type projects made from multiple Git repositories.
 
 This script was originally created when I needed a way to push/pull lots of different Git repositories into the same tree.
@@ -9,7 +9,7 @@ Why was this project created
 ============================
 As an IT company we end up writing and reusing common components all the time. Unfortunately there is no real way to bring all of these together into a project without abandoning the original repository information.
 
-Git-Bundle is designed to track and retain what files belong to what projects and provide an easy method to pull in code from other projects but still be able to update those projects upstream if alterations/upgrades are made to the code.
+Git-Mixin is designed to track and retain what files belong to what projects and provide an easy method to pull in code from other projects but still be able to update those projects upstream if alterations/upgrades are made to the code.
 
 
 Examples
@@ -22,32 +22,31 @@ Here we are setting up a standard Git controlled project using three mixins 'Alp
 	# Intialize everything if we havn't already
 	git init
 
-	# Install all the bundles
-	git bundle install http://path/to/alpha
-	git bundle install http://path/to/beta
-	git bundle install http://path/to/gamma
+	# Install all the mixins
+	git mixin install http://path/to/alpha
+	git mixin install http://path/to/beta
+	git mixin install http://path/to/gamma
 
-	# Merge the bundles into the main tree
-	git bundle merge
+	# Merge the mixins into the main tree
+	git mixins merge
 
 
-Merge local changes back into the bundle trees
-----------------------------------------------
+Merge local changes back into the mixin trees
+---------------------------------------------
 Sometimes a change is made to a file which should be pushed upstream into the repo managing that branch.
 
 Assuming that file-from-alpha.txt is part of the 'Alpha' project in the example above we can do:
 
-	# This merges all bundles upstream (i.e. copies all altered files into the .git/bundle/$name directories)
-	git bundle upstream
+	# This merges all mixins upstream (i.e. copies all altered files into the .git/mixins/$name directories)
+	git mixins upstream
 
 	# OR alternatively be more specific:
-	git bundle upstream alpha
+	git mixins upstream alpha
 
-You can now change into the `.git/bundle/alpha` directory and push to its upstream repo as needed.
+You can now change into the `.git/mixins/alpha` directory and push to its upstream repo as needed.
 
 
 TODO
 ====
-* `git bundle own` - Show a list of which bundles own what files, also allocate a file into a bundle (e.g. `git bundle own <bundle> <file>`)
-* `git bundle <install> -m` switch to perform `git bundle merge` automatically after finishing
+* `git mixin <install> -m` switch to perform `git mixin merge` automatically after finishing
 * Ability to sub-divide a repo (have one 'super' repo which contains others as sub-directories) - Useful since GitHub limits private repos
