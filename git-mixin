@@ -79,7 +79,6 @@ function init(ensureGit) {
 		myPath = program.path;
 	// Dump remaining args into program.operands
 	program.operands = _.filter(program.args, function(i) { return typeof i == 'string' });
-	program.operands.shift(); // Assume first arg is always going to be a command
 	if (ensureGit && !fs.existsSync('.git')) {
 		console.warn('No git repository found in working directory');
 		process.exit(1);
