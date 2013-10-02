@@ -46,6 +46,12 @@ Assuming that file-from-alpha.txt is part of the 'Alpha' project in the example 
 You can now change into the `.git/mixins/alpha` directory and push to its upstream repo as needed.
 
 
+Git Config
+==========
+* `mixin.defaultCommand` - (default: 'owner') the command to run if just `git mixin` is run without any implied command
+* `mixin.path` - (default: '.git/mixins') where the mixins are located
+
+
 TODO
 ====
 * `git mixin <install> -m` switch to perform `git mixin merge` automatically after finishing

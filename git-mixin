@@ -299,3 +299,8 @@ program
 // }}}
 
 program.parse(process.argv);
+
+if (!program.args.length) {
+	var defaultCommand = sh.exec('git config mixin.defaultCommand').stdout || 'owner';
+	console.log('NULL', program._events[defaultCommand]([]));
+}
