@@ -30,6 +30,8 @@ if (fs.existsSync('.git')) {
 
 // Functions {{{
 function getMixins(filters) {
+	if (!fs.existsSync(myPath))
+		return [];
 	var mixins = fs.readdirSync(myPath).sort();
 	if (filters && filters.length) {
 		mixins = _.filter(mixins, function(item) {
