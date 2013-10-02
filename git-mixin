@@ -60,6 +60,15 @@ function recurseFS(path, depth, thisDepth) {
 	}
 	return out;
 }
+function recurseMkDir(path) {
+	var buildPath = '';
+	_.each(path.split('/'), function(v) {
+		buildPath += v;
+		if (!fs.existsSync(buildPath))
+			fs.mkdirSync(buildPath);
+		buildPath += '/';
+	});
+}
 
 /**
 * Used to boot up all functionality before running a command
@@ -83,7 +92,8 @@ program
 	.version('0.0.1')
 	.usage('<command>')
 	.option('-p, --path <path>', 'Specify the mixin directory (otherwise specified in mixin.path)')
-	.option('-v, --verbose', 'Verbosity');
+	.option('-v, --verbose', 'Verbosity')
+	.option('-x, --mixin <mixin>', 'Specify the mixin to use for the \'claim\' command (otherwise the user is prompted)');
 // }}}
 
 // CMD: list {{{
@@ -133,15 +143,7 @@ program
 				return v.substr(mixinPath.length+1);
 			});
 			for (var f in files) {
-				// Check that directory tree exists {{{
-				var path = '';
-				_.each(pathComponent.dirname(files[f]).split('/'), function(v) {
-					path += v;
-					if (!fs.existsSync(path))
-						fs.mkdirSync(path);
-					path += '/';
-				});
-				// }}}
+				recurseMkDir(pathComponent.dirname(files[f]));
 				sh.run("cp '" + mixinPath + '/' + files[f] + "' './" + files[f] + "'");
 			}
 		}
@@ -206,6 +208,51 @@ program
 			align: ['c', 'l'],
 			stringLength: function(s) { return ansiTrim(s).length }
 		}));
+	});
+// }}}
+// CMD: create {{{
+program
+	.command('create')
+	.usage('')
+	.description('Macro command to quickly create a mixin directory')
+	.action(function() {
+		init(1);
+		var mixins = getMixins();
+		for (var o in program.operands) {
+			var mixin = program.operands[o];
+			if (_.indexOf(mixins, mixin, true) > -1) {
+				console.warn('Mixin already exists:', mixin);
+			} else {
+				console.log('Create mixin:', mixin);
+				recurseMkDir(myPath + '/' + mixin);
+			}
+		}
+	});
+// }}}
+// CMD: claim {{{
+program
+	.command('claim')
+	.usage('[files...]')
+	.description('Show the ownership of files')
+	.action(function() {
+		init(1);
+		var mixins = getMixins(program.mixin);
+		if (mixins.length == 0) {
+			console.warn('Mixin not found:', program.mixin);
+			process.exit(1);
+		} else if (mixins.length > 1) {
+			console.warn('Too many mixins found matching:', mixins);
+		}
+
+		for (var f in program.operands) {
+			var file = program.operands[f];
+			if (!fs.existsSync(file)) {
+				console.warn('File not found:', file);
+			} else {
+				console.log('CLAIM', file);
+				console.log("cp '" + myPrefix + '/' + file + "' '" + myPath + '/' + program.mixin + (myPrefix ? '/' + myPrefix : '') + '/' + file + "'");
+			}
+		}
 	});
 // }}}
 // CMD: status {{{
