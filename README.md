@@ -50,6 +50,7 @@ Git Config
 ==========
 * `mixin.defaultCommand` - (default: 'owner') the command to run if just `git mixin` is run without any implied command
 * `mixin.path` - (default: '.git/mixins') where the mixins are located
+* `mixin.aggressiveBase` - (default: false) insist on looking for the mixin directory before assuming that is the project base. This is useful if you have git instances inside your main project instance and dont want git-mixin assuming that the inner most module is the base project directory.
 
 
 TODO
