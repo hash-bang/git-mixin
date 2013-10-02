@@ -12,14 +12,14 @@ var myPath = sh.exec('git config bundle.path').stdout || '.git/bundles'; // Wher
 var myPrefix; // Where we are relative to the root of the project (e.g. 'dir1/dir2/dir3')
 // Work out the root directory and change to it - also setting myPrefix {{{
 if (fs.existsSync('.git')) {
-	myPrefix = '/';
+	myPrefix = '';
 } else { // No .git dir - try to find it by poping the dir stack until we hit root
 	var myDir = process.cwd().split('/');
 	myPrefix = [];
 	while (myDir.length) {
 		process.chdir(myDir.join('/'));
 		if (fs.existsSync('.git')) {
-			myPrefix = myPrefix.reverse().join('/');
+			myPrefix = myPrefix.reverse().join('/') + '/';
 			break;
 		} else {
 			myPrefix.push(myDir.pop());
@@ -166,12 +166,15 @@ program
 		var bundles = getBundles();
 		var bundleFiles = {};
 		if (!program.operands.length) // No files specified - assume all
-			program.operands = fs.readdirSync('.').sort();
+			program.operands = _.without(fs.readdirSync(myPrefix ? myPrefix : '.'), '.git').sort();
 		for (var b in bundles) { // Cache top layer of files using this prefix for each bundle
-			var files = recurseFS(myPath + myPrefix + bundles[b], 1);
-			bundleFiles[bundles[b]] = {};
-			for (var f in files) {
-				bundleFiles[bundles[b]][pathComponent.basename(files[f])] = true;
+			var bundleDir = myPath + '/' + bundles[b] + (myPrefix ? '/' + myPrefix : '');
+			if (fs.existsSync(bundleDir)) {
+				var files = recurseFS(bundleDir, 1);
+				bundleFiles[bundles[b]] = {};
+				for (var f in files) {
+					bundleFiles[bundles[b]][pathComponent.basename(files[f])] = true;
+				}
 			}
 		}
 		var tableData = [[color.bold('Bundle(s)'), color.bold('File')]];
@@ -212,6 +215,7 @@ program
 	.command('debug')
 	.description('Show config information')
 	.action(function() {
+		console.log('CWD/Base', process.cwd());
 		console.log('Path', myPath);
 		console.log('Prefix', myPrefix);
 	});

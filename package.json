@@ -7,7 +7,9 @@
 		"commander": ">=2.0.0",
 		"execSync": ">=1.0.1-pre",
 		"underscore": ">=1.5.2",
-		"path-component": ">=0.0.1"
+		"path-component": ">=0.0.1",
+		"text-table": ">=0.1.1",
+		"cli-color": ">=0.2.3"
 	},
 	"scripts": {
 	},
