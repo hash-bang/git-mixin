@@ -58,6 +58,22 @@ function recurseFS(path, depth, thisDepth) {
 	}
 	return out;
 }
+
+/**
+* Used to boot up all functionality before running a command
+* @param bool ensureGit Check for and fatally exit if the current base directory doesnt look like a normal Git project
+*/
+function init(ensureGit) {
+	if (program.path)
+		myPath = program.path;
+	// Dump remaining args into program.operands
+	program.operands = _.filter(program.args, function(i) { return typeof i == 'string' });
+	program.operands.shift(); // Assume first arg is always going to be a command
+	if (ensureGit && !fs.existsSync('.git')) {
+		console.warn('No git repository found in working directory');
+		process.exit(1);
+	}
+}
 // }}}
 
 // Global options {{{
@@ -65,15 +81,7 @@ program
 	.version('0.0.1')
 	.usage('<command>')
 	.option('-p, --path <path>', 'Specify the bundle directory (otherwise specified in bundle.path)')
-	.option('-v, --verbose', 'Verbosity')
-	.parse(process.argv);
-
-if (program.path)
-	myPath = program.path;
-
-// Dump remaining args into program.operands
-program.operands = _.filter(program.args, function(i) { return typeof i == 'string' });
-program.operands.shift(); // Assume first arg is always going to be a command
+	.option('-v, --verbose', 'Verbosity');
 // }}}
 
 // CMD: list {{{
@@ -82,6 +90,7 @@ program
 	.usage('[filters...]')
 	.description('List all installed bundles')
 	.action(function() {
+		init(1);
 		var bundles = getBundles(program.operands);
 		for (var b in bundles) {
 			console.log(bundles[b]);
@@ -94,6 +103,7 @@ program
 	.usage('[URIs...]')
 	.description('Download and install the URI to a bundle')
 	.action(function() {
+		init(1);
 		var existing = getBundles();
 		for (var o in program.operands) {
 			var name = pathComponent.basename(program.operands[o]).replace(/\.git$/, '');
@@ -112,6 +122,7 @@ program
 	.usage('[bundle...]')
 	.description('Merge the bundles into the working project')
 	.action(function() {
+		init(1);
 		var bundles = getBundles(program.operands);
 		for (var b in bundles) {
 			console.log('Merging', bundles[b], '...');
@@ -140,6 +151,7 @@ program
 	.usage('[bundle...]')
 	.description('Merge the bundles into the working project')
 	.action(function() {
+		init(1);
 		var bundles = getBundles(program.operands);
 		for (var b in bundles) {
 			console.log('Merging', bundles[b], '...');
@@ -163,6 +175,7 @@ program
 	.usage('[files...]')
 	.description('Show the ownership of files')
 	.action(function() {
+		init(1);
 		var bundles = getBundles();
 		var bundleFiles = {};
 		if (!program.operands.length) // No files specified - assume all
@@ -199,6 +212,7 @@ program
 	.usage('[bundle...]')
 	.description('Show the status of installed bundles')
 	.action(function() {
+		init(1);
 		var myDir = process.cwd();
 		var bundles = getBundles(program.operands);
 		for (var b in bundles) {
@@ -215,6 +229,7 @@ program
 	.command('debug')
 	.description('Show config information')
 	.action(function() {
+		init();
 		console.log('CWD/Base', process.cwd());
 		console.log('Path', myPath);
 		console.log('Prefix', myPrefix);
@@ -224,6 +239,7 @@ program
 program
 	.command('*')
 	.action(function() {
+		init();
 		console.warn('Unknown command');
 	});
 // }}}
