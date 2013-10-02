@@ -236,9 +236,10 @@ program
 	.description('Show the ownership of files')
 	.action(function() {
 		init(1);
-		var mixins = getMixins(program.mixin);
+		var mixin = program.mixin;
+		var mixins = getMixins([mixin]);
 		if (mixins.length == 0) {
-			console.warn('Mixin not found:', program.mixin);
+			console.warn('Mixin not found:', mixin);
 			process.exit(1);
 		} else if (mixins.length > 1) {
 			console.warn('Too many mixins found matching:', mixins);
@@ -246,11 +247,15 @@ program
 
 		for (var f in program.operands) {
 			var file = program.operands[f];
-			if (!fs.existsSync(file)) {
-				console.warn('File not found:', file);
+			var sourceFile = (myPrefix ? myPrefix + '/' : '') + file;
+			var dstFile = myPath + '/' + program.mixin + (myPrefix ? '/' + myPrefix : '') + '/' + file;
+			if (!fs.existsSync(sourceFile)) {
+				console.warn('File not found:', sourceFile);
+			} else if (fs.existsSync(dstFile)) {
+				console.warn('File already part of mixin:', sourceFile);
 			} else {
-				console.log('CLAIM', file);
-				console.log("cp '" + myPrefix + '/' + file + "' '" + myPath + '/' + program.mixin + (myPrefix ? '/' + myPrefix : '') + '/' + file + "'");
+				console.log('Claim', file);
+				sh.run("cp '" + sourceFile + "' '" + dstFile + "'");
 			}
 		}
 	});
