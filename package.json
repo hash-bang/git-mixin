@@ -1,5 +1,5 @@
 {
-	"name": "git-bundle",
+	"name": "git-mixin",
 	"version": "0.1.0",
 	"description": "Git addon to manage Mixin projects made up of multiple Git repos",
 	"main": "app.js",
