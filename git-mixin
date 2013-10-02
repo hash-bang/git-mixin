@@ -299,7 +299,7 @@ program
 
 program.parse(process.argv);
 
-if (!program.args.length) {
+if (!program.args.length) { // No command specified - drop back to using mixin.defaultCommand
 	var defaultCommand = sh.exec('git config mixin.defaultCommand').stdout || 'owner';
-	console.log('NULL', program._events[defaultCommand]([]));
+	program._events[defaultCommand]([]);
 }
