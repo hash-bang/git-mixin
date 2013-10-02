@@ -55,5 +55,7 @@ Git Config
 
 TODO
 ====
+* `git mixin claim -r` switch to recursively claim a directory tree
+* `git mixin tree` an NPM like tree structure display
 * `git mixin <install> -m` switch to perform `git mixin merge` automatically after finishing
 * Ability to sub-divide a repo (have one 'super' repo which contains others as sub-directories) - Useful since GitHub limits private repos
